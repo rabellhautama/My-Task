@@ -7,7 +7,11 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Share
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen() {
 
@@ -15,41 +19,57 @@ fun MainScreen() {
     var tasks by remember { mutableStateOf(listOf<String>()) }
     var error by remember { mutableStateOf("") }
 
-    Column(
-        modifier = Modifier
-            .padding(16.dp)
-            .verticalScroll(rememberScrollState())
-    ) {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("My To-Do List") },
+                actions = {
+                    IconButton(onClick = {
+                        error = "Fitur Share belum jadi, baru mau Proses"
+                    }) {
+                        Icon(Icons.Default.Share, contentDescription = "Share")
+                    }
+                }
+            )
+        }
+    ) { padding ->
 
-        Text("My To-Do List")
+        Column(
+            modifier = Modifier
+                .padding(padding)
+                .padding(16.dp)
+                .verticalScroll(rememberScrollState())
+        ) {
 
-        OutlinedTextField(
-            value = title,
-            onValueChange = { title = it },
-            label = { Text("Masukkan tugas") }
-        )
+            OutlinedTextField(
+                value = title,
+                onValueChange = { title = it },
+                label = { Text("Masukkan tugas") }
+            )
 
-        Button(onClick = {
-            if (title.isEmpty()) {
-               error = "Judul Tidak Boleh Kosong"
-            } else {
-                tasks = tasks + title
-                title = ""
-                error = ""
+            Button(onClick = {
+                if (title.isEmpty()) {
+                    error = "Judul Tidak Boleh Kosong"
+                } else {
+                    tasks = tasks + title
+                    title = ""
+                    error = ""
+                }
+            }) {
+                Text("Tambah")
             }
-        }) {
-            Text("Tambah")
-        }
-        if (error.isNotEmpty()) {
-            Text(error, color = androidx.compose.ui.graphics.Color.Red)
-        }
 
-        Spacer(modifier = Modifier.height(16.dp))
+            if (error.isNotEmpty()) {
+                Text(error, color = androidx.compose.ui.graphics.Color.Red)
+            }
 
-        Text("Daftar Tugas:")
+            Spacer(modifier = Modifier.height(16.dp))
 
-        tasks.forEach {
-            Text("- $it")
+            Text("Daftar Tugas:")
+
+            tasks.forEach {
+                Text("- $it")
+            }
         }
     }
 }
