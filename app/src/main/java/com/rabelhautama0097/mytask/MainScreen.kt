@@ -13,6 +13,7 @@ fun MainScreen() {
 
     var title by remember { mutableStateOf("") }
     var tasks by remember { mutableStateOf(listOf<String>()) }
+    var error by remember { mutableStateOf("") }
 
     Column(
         modifier = Modifier
@@ -29,12 +30,18 @@ fun MainScreen() {
         )
 
         Button(onClick = {
-            if (title.isNotEmpty()) {
+            if (title.isEmpty()) {
+               error = "Judul Tidak Boleh Kosong"
+            } else {
                 tasks = tasks + title
                 title = ""
+                error = ""
             }
         }) {
             Text("Tambah")
+        }
+        if (error.isNotEmpty()) {
+            Text(error, color = androidx.compose.ui.graphics.Color.Red)
         }
 
         Spacer(modifier = Modifier.height(16.dp))
