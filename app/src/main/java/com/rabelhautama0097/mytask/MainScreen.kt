@@ -15,10 +15,13 @@ import androidx.navigation.NavController
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(navController: NavController) {
+fun MainScreen(
+    navController: NavController,
+    tasks: List<String>,
+    onAddTask: (String) -> Unit
+) {
 
     var title by remember { mutableStateOf("") }
-    var tasks by remember { mutableStateOf(listOf<String>()) }
     var error by remember { mutableStateOf("") }
 
     Scaffold(
@@ -59,7 +62,7 @@ fun MainScreen(navController: NavController) {
                 if (title.isEmpty()) {
                     error = "Judul Tidak Boleh Kosong"
                 } else {
-                    tasks = tasks + title
+                    onAddTask(title)
                     title = ""
                     error = ""
                 }
