@@ -11,6 +11,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Share
 import androidx.navigation.NavController
+import android.content.Intent
+import androidx.compose.ui.platform.LocalContext
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -23,6 +25,7 @@ fun MainScreen(
 
     var title by remember { mutableStateOf("") }
     var error by remember { mutableStateOf("") }
+    val context = LocalContext.current
 
     Scaffold(
         topBar = {
@@ -30,7 +33,13 @@ fun MainScreen(
                 title = { Text("My To-Do List") },
                 actions = {
                     IconButton(onClick = {
-                        error = "Fitur Share belum jadi, baru mau Proses"
+                        val textToShare = tasks.joinToString { "\n" }
+                        val intent = Intent(Intent.ACTION_SEND).apply {
+                            type = "text/plain"
+                            putExtra(Intent.EXTRA_TEXT, textToShare)
+                        }
+                        context.startActivity(Intent.createChooser(intent, "share ke"))
+
                     }) {
                         Icon(Icons.Default.Share, contentDescription = "Share")
                     }
