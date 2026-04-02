@@ -8,12 +8,14 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Share
+import androidx.navigation.NavController
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen() {
+fun MainScreen(navController: NavController) {
 
     var title by remember { mutableStateOf("") }
     var tasks by remember { mutableStateOf(listOf<String>()) }
@@ -28,6 +30,12 @@ fun MainScreen() {
                         error = "Fitur Share belum jadi, baru mau Proses"
                     }) {
                         Icon(Icons.Default.Share, contentDescription = "Share")
+                    }
+                    IconButton(onClick = {
+                        navController.navigate("About")
+                    }) {
+                        Icon(Icons.Default.Info, contentDescription = "About")
+                        Spacer(modifier = Modifier.width(8.dp))
                     }
                 }
             )
@@ -58,7 +66,6 @@ fun MainScreen() {
             }) {
                 Text("Tambah")
             }
-
             if (error.isNotEmpty()) {
                 Text(error, color = androidx.compose.ui.graphics.Color.Red)
             }
