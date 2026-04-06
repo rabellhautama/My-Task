@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">My Task</string>
+    <string name="title">Daftar Tugas</string>
+    <string name="input_hint">Masukkan Tugas</string>
+    <string name="add">Tambah</string>
+    <string name="task_list">Daftar Tugas</string>
+    <string name="error_empty">Judul Tidak Boleh Kosong</string>
+
+    <string name="priority_label">Pilih Prioritas</string>
+    <string name="high">Tinggi</string>
+    <string name="medium">Medium</string>
+    <string name="low">Rendah</string>
+</resources>
