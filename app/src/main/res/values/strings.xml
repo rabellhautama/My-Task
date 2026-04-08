@@ -7,6 +7,7 @@
     <string name="task_list">Task List</string>
     <string name="error_empty">Title cannot be empty</string>
 
+
     <string name="priority_label">Priority</string>
     <string name="high">High</string>
     <string name="medium">Medium</string>
