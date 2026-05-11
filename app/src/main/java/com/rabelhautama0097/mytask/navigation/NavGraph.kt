@@ -1,10 +1,10 @@
 package com.rabelhautama0097.mytask.navigation
 
+import AboutScreen
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.rabelhautama0097.mytask.screen.AboutScreen
 import com.rabelhautama0097.mytask.screen.MainScreen
 import com.rabelhautama0097.mytask.screen.TaskViewModel
 
