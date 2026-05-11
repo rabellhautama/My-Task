@@ -174,7 +174,7 @@ fun MainScreen(
             modifier = Modifier
                 .padding(padding)
                 .padding(16.dp)
-                .verticalScroll(rememberScrollState())
+
         ) {
 
             OutlinedTextField(
@@ -286,7 +286,7 @@ fun MainScreen(
                 if (showList) {
 
                     LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier.fillMaxSize(1f),
                         contentPadding = PaddingValues(bottom = 84.dp)
                     ) {
 
@@ -324,7 +324,7 @@ fun MainScreen(
 
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(2),
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier.fillMaxSize(1f),
                         contentPadding = PaddingValues(8.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -338,6 +338,10 @@ fun MainScreen(
                                     .clickable { },
                                 colors = CardDefaults.cardColors(
                                     containerColor = MaterialTheme.colorScheme.surface
+                                ),
+                                border = androidx.compose.foundation.BorderStroke(
+                                    1.dp,
+                                    MaterialTheme.colorScheme.outline
                                 )
                             ) {
 
