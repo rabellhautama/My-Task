@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -26,6 +25,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -39,64 +39,97 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.rabelhautama0097.mytask.R
-
+import com.rabelhautama0097.mytask.model.Task
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
     navController: NavController,
-    tasks: List<String>,
-    onAddTask: (String) -> Unit
+    viewModel: TaskViewModel
 ) {
 
     var title by remember { mutableStateOf("") }
     var error by remember { mutableStateOf("") }
+    var priority by remember { mutableStateOf("low") }
+
+    val tasks by viewModel.tasks.collectAsState()
+
     val context = LocalContext.current
-    var priority by remember { mutableStateOf("low")}
 
-
+    val errorEmpty = stringResource(R.string.error_empty)
+    val highText = stringResource(R.string.high)
+    val mediumText = stringResource(R.string.medium)
+    val lowText = stringResource(R.string.low)
 
     Scaffold(
+
         topBar = {
+
             TopAppBar(
+
                 title = {
+
                     Row(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
+
                         Image(
                             painter = painterResource(id = R.drawable.task),
                             contentDescription = "Logo",
                             modifier = Modifier.size(50.dp)
                         )
-                        Text(stringResource(R.string.title))
+
+                        Text(text = stringResource(R.string.title))
                     }
                 },
+
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
                 ),
+
                 actions = {
-                    IconButton(onClick = {
-                        val textToShare = "Daftar Tugas:\n" + tasks.joinToString ("\n")
-                        val intent = Intent(Intent.ACTION_SEND).apply {
-                            type = "text/plain"
-                            putExtra(Intent.EXTRA_TEXT, textToShare)
+
+                    IconButton(
+                        onClick = {
+
+                            val textToShare =
+                                "Daftar Tugas:\n" + tasks.joinToString("\n") {
+                                    "${it.title} (${it.priority})"
+                                }
+
+                            val intent = Intent(Intent.ACTION_SEND).apply {
+                                type = "text/plain"
+                                putExtra(Intent.EXTRA_TEXT, textToShare)
+                            }
+
+                            context.startActivity(
+                                Intent.createChooser(intent, "Share ke")
+                            )
                         }
-                        context.startActivity(Intent.createChooser(intent, "share ke"))
+                    ) {
 
-                    }) {
-                        Icon(Icons.Default.Share, contentDescription = "Share")
-                    }
-                    IconButton(onClick = {
-                        navController.navigate("About")
-                    }) {
-                        Icon(Icons.Default.Info, contentDescription = "About")
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Icon(
+                            imageVector = Icons.Default.Share,
+                            contentDescription = "Share"
+                        )
                     }
 
+                    IconButton(
+                        onClick = {
+                            navController.navigate("about")
+                        }
+                    ) {
+
+                        Icon(
+                            imageVector = Icons.Default.Info,
+                            contentDescription = "About"
+                        )
+                    }
                 }
             )
         }
+
     ) { padding ->
 
         Column(
@@ -105,60 +138,104 @@ fun MainScreen(
                 .padding(16.dp)
                 .verticalScroll(rememberScrollState())
         ) {
+
             OutlinedTextField(
                 value = title,
-                onValueChange = { title = it },
-                label = { Text(stringResource(R.string.input_hint))}
+                onValueChange = {
+                    title = it
+                },
+                label = {
+                    Text(text = stringResource(R.string.input_hint))
+                }
             )
+
             Spacer(modifier = Modifier.height(8.dp))
 
-            Text(stringResource(R.string.priority_label))
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(text = stringResource(R.string.priority_label))
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+
                 RadioButton(
                     selected = priority == "high",
-                    onClick = { priority = "high"}
+                    onClick = {
+                        priority = "high"
+                    }
                 )
-                Text(stringResource(R.string.high))
+
+                Text(text = highText)
 
                 RadioButton(
                     selected = priority == "medium",
-                    onClick = { priority = "medium"}
+                    onClick = {
+                        priority = "medium"
+                    }
                 )
-                Text(stringResource(R.string.medium))
+
+                Text(text = mediumText)
 
                 RadioButton(
                     selected = priority == "low",
-                    onClick = { priority = "low"}
-                )
-                Text(stringResource(R.string.low))
-            }
-
-            Button(onClick = {
-                if (title.isEmpty()) {
-                    error = context.getString(R.string.error_empty)
-                } else {
-                    val priorityText = when (priority) {
-                        "high" -> context.getString(R.string.high)
-                        "medium" -> context.getString(R.string.medium)
-                        else -> context.getString(R.string.low)
+                    onClick = {
+                        priority = "low"
                     }
-                    onAddTask("$title ($priorityText)")
-                    title = ""
-                    error = ""
-                }
+                )
 
-            }) {
-                Text(stringResource(R.string.add))
+                Text(text = lowText)
             }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Button(
+                onClick = {
+
+                    if (title.isEmpty()) {
+
+                        error = errorEmpty
+
+                    } else {
+
+                        val priorityText = when (priority) {
+                            "high" -> highText
+                            "medium" -> mediumText
+                            else -> lowText
+                        }
+
+                        viewModel.addTask(
+                            Task(
+                                title = title,
+                                priority = priorityText
+                            )
+                        )
+
+                        title = ""
+                        priority = "low"
+                        error = ""
+                    }
+                }
+            ) {
+
+                Text(text = stringResource(R.string.add))
+            }
+
             if (error.isNotEmpty()) {
-                Text(error, color = Color.Red)
+
+                Text(
+                    text = error,
+                    color = Color.Red
+                )
             }
+
             Spacer(modifier = Modifier.height(16.dp))
 
-                Text(stringResource(R.string.task_list))
+            Text(text = stringResource(R.string.task_list))
 
-            tasks.forEach {
-                Text("- $it")
+            tasks.forEach { task ->
+
+                Text(
+                    text = "- ${task.title} (${task.priority})"
+                )
             }
         }
     }
