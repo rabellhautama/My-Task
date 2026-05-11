@@ -70,9 +70,11 @@ fun MainScreen(
     var priority by remember { mutableStateOf("low") }
     var showList by remember { mutableStateOf(true) }
 
-    // DELETE
     var showDialog by remember { mutableStateOf(false) }
     var selectedTask by remember { mutableStateOf<Task?>(null) }
+
+    var editTitle by remember { mutableStateOf("") }
+    var editPriority by remember { mutableStateOf("low") }
 
     val tasks by viewModel.tasks.collectAsState()
 
@@ -331,6 +333,7 @@ fun MainScreen(
                                     IconButton(
                                         onClick = {
                                             selectedTask = task
+                                            editTitle = ""
                                             showDialog = true
                                         }
                                     ) {
@@ -364,10 +367,24 @@ fun MainScreen(
                             Card(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clickable { },
+                                    .clickable {
+
+                                        selectedTask = task
+                                        editTitle = task.title
+
+                                        editPriority = when (task.priority) {
+                                            highText -> "high"
+                                            mediumText -> "medium"
+                                            else -> "low"
+                                        }
+
+                                        showDialog = true
+                                    },
+
                                 colors = CardDefaults.cardColors(
                                     containerColor = MaterialTheme.colorScheme.surface
                                 ),
+
                                 border = BorderStroke(
                                     1.dp,
                                     MaterialTheme.colorScheme.outline
@@ -396,6 +413,7 @@ fun MainScreen(
                                         IconButton(
                                             onClick = {
                                                 selectedTask = task
+                                                editTitle = ""
                                                 showDialog = true
                                             }
                                         ) {
@@ -421,11 +439,12 @@ fun MainScreen(
         }
 
         // DIALOG DELETE
-        if (showDialog && selectedTask != null) {
+        if (showDialog && selectedTask != null && editTitle.isEmpty()) {
 
             AlertDialog(
                 onDismissRequest = {
                     showDialog = false
+                    selectedTask = null
                 },
 
                 title = {
@@ -463,6 +482,115 @@ fun MainScreen(
                     ) {
 
                         Text("Batal")
+                    }
+                }
+            )
+        }
+
+        // DIALOG UPDATE
+        if (showDialog && selectedTask != null && editTitle.isNotEmpty()) {
+
+            AlertDialog(
+                onDismissRequest = {
+                    showDialog = false
+                    selectedTask = null
+                    editTitle = ""
+                },
+
+                title = {
+                    Text("Update Task")
+                },
+
+                text = {
+
+                    Column {
+
+                        OutlinedTextField(
+                            value = editTitle,
+                            onValueChange = {
+                                editTitle = it
+                            },
+                            label = {
+                                Text("Task")
+                            }
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+
+                            RadioButton(
+                                selected = editPriority == "high",
+                                onClick = {
+                                    editPriority = "high"
+                                }
+                            )
+
+                            Text(highText)
+
+                            RadioButton(
+                                selected = editPriority == "medium",
+                                onClick = {
+                                    editPriority = "medium"
+                                }
+                            )
+
+                            Text(mediumText)
+
+                            RadioButton(
+                                selected = editPriority == "low",
+                                onClick = {
+                                    editPriority = "low"
+                                }
+                            )
+
+                            Text(lowText)
+                        }
+                    }
+                },
+
+                confirmButton = {
+
+                    Button(
+                        onClick = {
+
+                            val priorityText = when (editPriority) {
+                                "high" -> highText
+                                "medium" -> mediumText
+                                else -> lowText
+                            }
+
+                            viewModel.updateTask(
+                                selectedTask!!.copy(
+                                    title = editTitle,
+                                    priority = priorityText
+                                )
+                            )
+
+                            showDialog = false
+                            selectedTask = null
+                            editTitle = ""
+                        }
+                    ) {
+
+                        Text("Update")
+                    }
+                },
+
+                dismissButton = {
+
+                    Button(
+                        onClick = {
+
+                            showDialog = false
+                            selectedTask = null
+                            editTitle = ""
+                        }
+                    ) {
+
+                        Text("Cancel")
                     }
                 }
             )
