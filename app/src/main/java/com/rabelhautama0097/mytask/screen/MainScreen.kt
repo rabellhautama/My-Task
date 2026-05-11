@@ -1,6 +1,7 @@
 package com.rabelhautama0097.mytask.screen
 
 import android.content.Intent
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -17,11 +18,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -35,6 +37,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -54,7 +57,6 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.rabelhautama0097.mytask.R
 import com.rabelhautama0097.mytask.model.Task
-import androidx.compose.foundation.lazy.items
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -67,6 +69,10 @@ fun MainScreen(
     var error by remember { mutableStateOf("") }
     var priority by remember { mutableStateOf("low") }
     var showList by remember { mutableStateOf(true) }
+
+    // DELETE
+    var showDialog by remember { mutableStateOf(false) }
+    var selectedTask by remember { mutableStateOf<Task?>(null) }
 
     val tasks by viewModel.tasks.collectAsState()
 
@@ -174,7 +180,6 @@ fun MainScreen(
             modifier = Modifier
                 .padding(padding)
                 .padding(16.dp)
-
         ) {
 
             OutlinedTextField(
@@ -286,7 +291,7 @@ fun MainScreen(
                 if (showList) {
 
                     LazyColumn(
-                        modifier = Modifier.fillMaxSize(1f),
+                        modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(bottom = 84.dp)
                     ) {
 
@@ -295,23 +300,47 @@ fun MainScreen(
                             Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(16.dp)
-                                    .clickable { },
+                                    .padding(16.dp),
                                 verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
 
-                                Text(
-                                    text = task.title,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                    fontWeight = FontWeight.Bold
-                                )
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
 
-                                Text(
-                                    text = task.priority,
-                                    maxLines = 2,
-                                    overflow = TextOverflow.Ellipsis
-                                )
+                                    Column(
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+
+                                        Text(
+                                            text = task.title,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
+                                            fontWeight = FontWeight.Bold
+                                        )
+
+                                        Text(
+                                            text = task.priority,
+                                            maxLines = 2,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                    }
+
+                                    IconButton(
+                                        onClick = {
+                                            selectedTask = task
+                                            showDialog = true
+                                        }
+                                    ) {
+
+                                        Icon(
+                                            imageVector = Icons.Default.Delete,
+                                            contentDescription = "Delete"
+                                        )
+                                    }
+                                }
                             }
 
                             HorizontalDivider(
@@ -324,7 +353,7 @@ fun MainScreen(
 
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(2),
-                        modifier = Modifier.fillMaxSize(1f),
+                        modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(8.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -339,7 +368,7 @@ fun MainScreen(
                                 colors = CardDefaults.cardColors(
                                     containerColor = MaterialTheme.colorScheme.surface
                                 ),
-                                border = androidx.compose.foundation.BorderStroke(
+                                border = BorderStroke(
                                     1.dp,
                                     MaterialTheme.colorScheme.outline
                                 )
@@ -350,12 +379,33 @@ fun MainScreen(
                                     verticalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
 
-                                    Text(
-                                        text = task.title,
-                                        maxLines = 2,
-                                        overflow = TextOverflow.Ellipsis,
-                                        fontWeight = FontWeight.Bold
-                                    )
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+
+                                        Text(
+                                            text = task.title,
+                                            modifier = Modifier.weight(1f),
+                                            maxLines = 2,
+                                            overflow = TextOverflow.Ellipsis,
+                                            fontWeight = FontWeight.Bold
+                                        )
+
+                                        IconButton(
+                                            onClick = {
+                                                selectedTask = task
+                                                showDialog = true
+                                            }
+                                        ) {
+
+                                            Icon(
+                                                imageVector = Icons.Default.Delete,
+                                                contentDescription = "Delete"
+                                            )
+                                        }
+                                    }
 
                                     Text(
                                         text = task.priority,
@@ -368,6 +418,54 @@ fun MainScreen(
                     }
                 }
             }
+        }
+
+        // DIALOG DELETE
+        if (showDialog && selectedTask != null) {
+
+            AlertDialog(
+                onDismissRequest = {
+                    showDialog = false
+                },
+
+                title = {
+                    Text(text = "Konfirmasi")
+                },
+
+                text = {
+                    Text(text = "Yakin ingin menghapus task ini?")
+                },
+
+                confirmButton = {
+
+                    TextButton(
+                        onClick = {
+
+                            viewModel.deleteTask(selectedTask!!)
+
+                            showDialog = false
+                            selectedTask = null
+                        }
+                    ) {
+
+                        Text("Hapus")
+                    }
+                },
+
+                dismissButton = {
+
+                    TextButton(
+                        onClick = {
+
+                            showDialog = false
+                            selectedTask = null
+                        }
+                    ) {
+
+                        Text("Batal")
+                    }
+                }
+            )
         }
     }
 }
