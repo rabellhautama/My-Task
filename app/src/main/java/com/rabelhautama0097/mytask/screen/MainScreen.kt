@@ -21,6 +21,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.AlertDialog
@@ -78,14 +79,23 @@ fun MainScreen(
     var editTitle by remember { mutableStateOf("") }
     var editPriority by remember { mutableStateOf("low") }
 
+    var deletedTasks by remember {
+        mutableStateOf(listOf<Task>())
+    }
+
+    var showRecycleBin by remember {
+        mutableStateOf(false)
+    }
+
     val tasks by viewModel.tasks.collectAsState()
 
     val context = androidx.compose.ui.platform.LocalContext.current
+
     val dataStoreManager = DataStoreManager(context)
 
-    val showListFlow by dataStoreManager
-        .showListFlow
-        .collectAsState(initial = true)
+    val showListFlow by dataStoreManager.showListFlow.collectAsState(
+        initial = true
+    )
 
     var showList by remember {
         mutableStateOf(showListFlow)
@@ -133,10 +143,8 @@ fun MainScreen(
 
                 actions = {
 
-                    // GRID / LIST
                     IconButton(
                         onClick = {
-
                             showList = !showList
 
                             scope.launch {
@@ -162,7 +170,6 @@ fun MainScreen(
                         )
                     }
 
-                    // SHARE
                     IconButton(
                         onClick = {
 
@@ -189,7 +196,18 @@ fun MainScreen(
                         )
                     }
 
-                    // ABOUT
+                    IconButton(
+                        onClick = {
+                            showRecycleBin = true
+                        }
+                    ) {
+
+                        Icon(
+                            imageVector = Icons.Default.DeleteSweep,
+                            contentDescription = "Recycle Bin"
+                        )
+                    }
+
                     IconButton(
                         onClick = {
                             navController.navigate("about")
@@ -213,7 +231,6 @@ fun MainScreen(
                 .padding(16.dp)
         ) {
 
-            // INPUT TASK
             OutlinedTextField(
                 value = title,
 
@@ -222,7 +239,9 @@ fun MainScreen(
                 },
 
                 label = {
-                    Text(text = stringResource(R.string.input_hint))
+                    Text(
+                        text = stringResource(R.string.input_hint)
+                    )
                 },
 
                 modifier = Modifier.fillMaxWidth()
@@ -230,7 +249,6 @@ fun MainScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // PRIORITY
             Text(
                 text = stringResource(R.string.priority_label)
             )
@@ -241,6 +259,7 @@ fun MainScreen(
 
                 RadioButton(
                     selected = priority == "high",
+
                     onClick = {
                         priority = "high"
                     }
@@ -250,6 +269,7 @@ fun MainScreen(
 
                 RadioButton(
                     selected = priority == "medium",
+
                     onClick = {
                         priority = "medium"
                     }
@@ -259,6 +279,7 @@ fun MainScreen(
 
                 RadioButton(
                     selected = priority == "low",
+
                     onClick = {
                         priority = "low"
                     }
@@ -269,7 +290,6 @@ fun MainScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // BUTTON ADD
             Button(
                 onClick = {
 
@@ -305,7 +325,6 @@ fun MainScreen(
                 )
             }
 
-            // ERROR
             if (error.isNotEmpty()) {
 
                 Text(
@@ -316,7 +335,6 @@ fun MainScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // EMPTY TASK
             if (tasks.isEmpty()) {
 
                 Column(
@@ -325,6 +343,7 @@ fun MainScreen(
                         .padding(16.dp),
 
                     verticalArrangement = Arrangement.Center,
+
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
 
@@ -335,12 +354,14 @@ fun MainScreen(
 
             } else {
 
-                // LIST VIEW
                 if (showList) {
 
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(bottom = 84.dp)
+
+                        contentPadding = PaddingValues(
+                            bottom = 84.dp
+                        )
                     ) {
 
                         items(tasks) { task ->
@@ -364,11 +385,9 @@ fun MainScreen(
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
 
-                                    horizontalArrangement =
-                                        Arrangement.SpaceBetween,
+                                    horizontalArrangement = Arrangement.SpaceBetween,
 
-                                    verticalAlignment =
-                                        Alignment.CenterVertically
+                                    verticalAlignment = Alignment.CenterVertically
                                 ) {
 
                                     Column(
@@ -377,14 +396,19 @@ fun MainScreen(
 
                                         Text(
                                             text = task.title,
+
                                             maxLines = 1,
+
                                             overflow = TextOverflow.Ellipsis,
+
                                             fontWeight = FontWeight.Bold
                                         )
 
                                         Text(
                                             text = task.priority,
+
                                             maxLines = 2,
+
                                             overflow = TextOverflow.Ellipsis
                                         )
                                     }
@@ -414,7 +438,6 @@ fun MainScreen(
 
                 } else {
 
-                    // GRID VIEW
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(2),
 
@@ -422,11 +445,9 @@ fun MainScreen(
 
                         contentPadding = PaddingValues(8.dp),
 
-                        horizontalArrangement =
-                            Arrangement.spacedBy(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
 
-                        verticalArrangement =
-                            Arrangement.spacedBy(8.dp)
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
 
                         items(tasks) { task ->
@@ -441,6 +462,7 @@ fun MainScreen(
                                         editTitle = task.title
 
                                         editPriority = when (task.priority) {
+
                                             highText -> "high"
                                             mediumText -> "medium"
                                             else -> "low"
@@ -450,8 +472,7 @@ fun MainScreen(
                                     },
 
                                 colors = CardDefaults.cardColors(
-                                    containerColor =
-                                        MaterialTheme.colorScheme.surface
+                                    containerColor = MaterialTheme.colorScheme.surface
                                 ),
 
                                 border = BorderStroke(
@@ -463,18 +484,15 @@ fun MainScreen(
                                 Column(
                                     modifier = Modifier.padding(16.dp),
 
-                                    verticalArrangement =
-                                        Arrangement.spacedBy(8.dp)
+                                    verticalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
 
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
 
-                                        horizontalArrangement =
-                                            Arrangement.SpaceBetween,
+                                        horizontalArrangement = Arrangement.SpaceBetween,
 
-                                        verticalAlignment =
-                                            Alignment.CenterVertically
+                                        verticalAlignment = Alignment.CenterVertically
                                     ) {
 
                                         Text(
@@ -484,8 +502,7 @@ fun MainScreen(
 
                                             maxLines = 2,
 
-                                            overflow =
-                                                TextOverflow.Ellipsis,
+                                            overflow = TextOverflow.Ellipsis,
 
                                             fontWeight = FontWeight.Bold
                                         )
@@ -495,14 +512,13 @@ fun MainScreen(
 
                                                 selectedTask = task
                                                 editTitle = ""
+
                                                 showDialog = true
                                             }
                                         ) {
 
                                             Icon(
-                                                imageVector =
-                                                    Icons.Default.Delete,
-
+                                                imageVector = Icons.Default.Delete,
                                                 contentDescription = "Delete"
                                             )
                                         }
@@ -519,8 +535,7 @@ fun MainScreen(
 
                                             highText -> Color.Red
 
-                                            mediumText ->
-                                                Color(0xFFFFC107)
+                                            mediumText -> Color(0xFFFFC107)
 
                                             else -> Color.Green
                                         },
@@ -536,11 +551,7 @@ fun MainScreen(
         }
 
         // DIALOG DELETE
-        if (
-            showDialog &&
-            selectedTask != null &&
-            editTitle.isEmpty()
-        ) {
+        if (showDialog && selectedTask != null && editTitle.isEmpty()) {
 
             AlertDialog(
 
@@ -562,6 +573,8 @@ fun MainScreen(
 
                     TextButton(
                         onClick = {
+
+                            deletedTasks = deletedTasks + selectedTask!!
 
                             viewModel.deleteTask(selectedTask!!)
 
@@ -591,11 +604,7 @@ fun MainScreen(
         }
 
         // DIALOG UPDATE
-        if (
-            showDialog &&
-            selectedTask != null &&
-            editTitle.isNotEmpty()
-        ) {
+        if (showDialog && selectedTask != null && editTitle.isNotEmpty()) {
 
             AlertDialog(
 
@@ -626,13 +635,10 @@ fun MainScreen(
                             }
                         )
 
-                        Spacer(
-                            modifier = Modifier.height(8.dp)
-                        )
+                        Spacer(modifier = Modifier.height(8.dp))
 
                         Row(
-                            verticalAlignment =
-                                Alignment.CenterVertically
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
 
                             RadioButton(
@@ -681,6 +687,7 @@ fun MainScreen(
                             }
 
                             viewModel.updateTask(
+
                                 selectedTask!!.copy(
                                     title = editTitle,
                                     priority = priorityText
@@ -709,6 +716,83 @@ fun MainScreen(
                     ) {
 
                         Text("Cancel")
+                    }
+                }
+            )
+        }
+
+        // RECYCLE BIN
+        if (showRecycleBin) {
+
+            AlertDialog(
+
+                onDismissRequest = {
+                    showRecycleBin = false
+                },
+
+                title = {
+                    Text("Recycle Bin")
+                },
+
+                text = {
+
+                    if (deletedTasks.isEmpty()) {
+
+                        Text("Belum ada task yang dihapus")
+
+                    } else {
+
+                        Column {
+
+                            deletedTasks.forEach { task ->
+
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 8.dp),
+
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+
+                                    Column {
+
+                                        Text(
+                                            text = task.title,
+                                            fontWeight = FontWeight.Bold
+                                        )
+
+                                        Text(text = task.priority)
+                                    }
+
+                                    TextButton(
+                                        onClick = {
+
+                                            viewModel.addTask(task)
+
+                                            deletedTasks =
+                                                deletedTasks - task
+                                        }
+                                    ) {
+
+                                        Text("Undo")
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+
+                confirmButton = {
+
+                    TextButton(
+                        onClick = {
+                            showRecycleBin = false
+                        }
+                    ) {
+
+                        Text("Tutup")
                     }
                 }
             )
