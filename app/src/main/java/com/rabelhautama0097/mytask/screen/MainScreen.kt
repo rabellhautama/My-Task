@@ -1,5 +1,6 @@
 package com.rabelhautama0097.mytask.screen
 
+import android.content.Context
 import android.content.Intent
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -45,6 +46,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -68,7 +70,6 @@ fun MainScreen(
     var title by remember { mutableStateOf("") }
     var error by remember { mutableStateOf("") }
     var priority by remember { mutableStateOf("low") }
-    var showList by remember { mutableStateOf(true) }
 
     var showDialog by remember { mutableStateOf(false) }
     var selectedTask by remember { mutableStateOf<Task?>(null) }
@@ -79,6 +80,17 @@ fun MainScreen(
     val tasks by viewModel.tasks.collectAsState()
 
     val context = androidx.compose.ui.platform.LocalContext.current
+
+    val sharedPreferences = context.getSharedPreferences(
+        "app_preferences",
+        android.content.Context.MODE_PRIVATE
+    )
+
+    var showList by remember {
+        mutableStateOf(
+            sharedPreferences.getBoolean("show_list", true)
+        )
+    }
 
     val errorEmpty = stringResource(R.string.error_empty)
     val highText = stringResource(R.string.high)
@@ -117,6 +129,9 @@ fun MainScreen(
                     IconButton(
                         onClick = {
                             showList = !showList
+                            sharedPreferences.edit()
+                                .putBoolean("show_list", showList)
+                                .apply()
                         }
                     ) {
 
@@ -427,8 +442,14 @@ fun MainScreen(
 
                                     Text(
                                         text = task.priority,
-                                        maxLines = 4,
-                                        overflow = TextOverflow.Ellipsis
+                                        maxLines = 2,
+                                        overflow = TextOverflow.Ellipsis,
+                                        color = when (task.priority) {
+                                            highText -> Color.Red
+                                            mediumText -> Color(0xFFFFC107)
+                                            else -> Color.Green
+                                        },
+                                        fontWeight = FontWeight.Bold
                                     )
                                 }
                             }
