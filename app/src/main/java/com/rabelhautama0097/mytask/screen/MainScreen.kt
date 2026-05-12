@@ -1,6 +1,5 @@
 package com.rabelhautama0097.mytask.screen
 
-import android.content.Context
 import android.content.Intent
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -42,11 +41,12 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -59,6 +59,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.rabelhautama0097.mytask.R
 import com.rabelhautama0097.mytask.model.Task
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -80,17 +81,21 @@ fun MainScreen(
     val tasks by viewModel.tasks.collectAsState()
 
     val context = androidx.compose.ui.platform.LocalContext.current
+    val dataStoreManager = DataStoreManager(context)
 
-    val sharedPreferences = context.getSharedPreferences(
-        "app_preferences",
-        android.content.Context.MODE_PRIVATE
-    )
+    val showListFlow by dataStoreManager
+        .showListFlow
+        .collectAsState(initial = true)
 
     var showList by remember {
-        mutableStateOf(
-            sharedPreferences.getBoolean("show_list", true)
-        )
+        mutableStateOf(showListFlow)
     }
+
+    LaunchedEffect(showListFlow) {
+        showList = showListFlow
+    }
+
+    val scope = rememberCoroutineScope()
 
     val errorEmpty = stringResource(R.string.error_empty)
     val highText = stringResource(R.string.high)
@@ -115,7 +120,9 @@ fun MainScreen(
                             modifier = Modifier.size(50.dp)
                         )
 
-                        Text(text = stringResource(R.string.title))
+                        Text(
+                            text = stringResource(R.string.title)
+                        )
                     }
                 },
 
@@ -126,12 +133,15 @@ fun MainScreen(
 
                 actions = {
 
+                    // GRID / LIST
                     IconButton(
                         onClick = {
+
                             showList = !showList
-                            sharedPreferences.edit()
-                                .putBoolean("show_list", showList)
-                                .apply()
+
+                            scope.launch {
+                                dataStoreManager.saveShowList(showList)
+                            }
                         }
                     ) {
 
@@ -142,6 +152,7 @@ fun MainScreen(
                                 else
                                     R.drawable.outline_view_list_24
                             ),
+
                             contentDescription = stringResource(
                                 id = if (showList)
                                     R.string.grid
@@ -151,13 +162,15 @@ fun MainScreen(
                         )
                     }
 
+                    // SHARE
                     IconButton(
                         onClick = {
 
                             val textToShare =
-                                "Daftar Tugas:\n" + tasks.joinToString("\n") {
-                                    "${it.title} (${it.priority})"
-                                }
+                                "Daftar Tugas:\n" +
+                                        tasks.joinToString("\n") {
+                                            "${it.title} (${it.priority})"
+                                        }
 
                             val intent = Intent(Intent.ACTION_SEND).apply {
                                 type = "text/plain"
@@ -176,6 +189,7 @@ fun MainScreen(
                         )
                     }
 
+                    // ABOUT
                     IconButton(
                         onClick = {
                             navController.navigate("about")
@@ -199,20 +213,27 @@ fun MainScreen(
                 .padding(16.dp)
         ) {
 
+            // INPUT TASK
             OutlinedTextField(
                 value = title,
+
                 onValueChange = {
                     title = it
                 },
+
                 label = {
                     Text(text = stringResource(R.string.input_hint))
                 },
+
                 modifier = Modifier.fillMaxWidth()
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            Text(text = stringResource(R.string.priority_label))
+            // PRIORITY
+            Text(
+                text = stringResource(R.string.priority_label)
+            )
 
             Row(
                 verticalAlignment = Alignment.CenterVertically
@@ -248,6 +269,7 @@ fun MainScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
+            // BUTTON ADD
             Button(
                 onClick = {
 
@@ -258,6 +280,7 @@ fun MainScreen(
                     } else {
 
                         val priorityText = when (priority) {
+
                             "high" -> highText
                             "medium" -> mediumText
                             else -> lowText
@@ -277,9 +300,12 @@ fun MainScreen(
                 }
             ) {
 
-                Text(text = stringResource(R.string.add))
+                Text(
+                    text = stringResource(R.string.add)
+                )
             }
 
+            // ERROR
             if (error.isNotEmpty()) {
 
                 Text(
@@ -290,21 +316,26 @@ fun MainScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // EMPTY TASK
             if (tasks.isEmpty()) {
 
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(16.dp),
+
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
 
-                    Text(text = stringResource(R.string.task_list))
+                    Text(
+                        text = stringResource(R.string.task_list)
+                    )
                 }
 
             } else {
 
+                // LIST VIEW
                 if (showList) {
 
                     LazyColumn(
@@ -317,14 +348,27 @@ fun MainScreen(
                             Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
+
+                                    .clickable {
+
+                                        navController.navigate(
+                                            "detail/${task.title}/${task.priority}"
+                                        )
+                                    }
+
                                     .padding(16.dp),
+
                                 verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
 
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
+
+                                    horizontalArrangement =
+                                        Arrangement.SpaceBetween,
+
+                                    verticalAlignment =
+                                        Alignment.CenterVertically
                                 ) {
 
                                     Column(
@@ -347,6 +391,7 @@ fun MainScreen(
 
                                     IconButton(
                                         onClick = {
+
                                             selectedTask = task
                                             editTitle = ""
                                             showDialog = true
@@ -369,12 +414,19 @@ fun MainScreen(
 
                 } else {
 
+                    // GRID VIEW
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(2),
+
                         modifier = Modifier.fillMaxSize(),
+
                         contentPadding = PaddingValues(8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+
+                        horizontalArrangement =
+                            Arrangement.spacedBy(8.dp),
+
+                        verticalArrangement =
+                            Arrangement.spacedBy(8.dp)
                     ) {
 
                         items(tasks) { task ->
@@ -382,6 +434,7 @@ fun MainScreen(
                             Card(
                                 modifier = Modifier
                                     .fillMaxWidth()
+
                                     .clickable {
 
                                         selectedTask = task
@@ -397,7 +450,8 @@ fun MainScreen(
                                     },
 
                                 colors = CardDefaults.cardColors(
-                                    containerColor = MaterialTheme.colorScheme.surface
+                                    containerColor =
+                                        MaterialTheme.colorScheme.surface
                                 ),
 
                                 border = BorderStroke(
@@ -408,25 +462,37 @@ fun MainScreen(
 
                                 Column(
                                     modifier = Modifier.padding(16.dp),
-                                    verticalArrangement = Arrangement.spacedBy(8.dp)
+
+                                    verticalArrangement =
+                                        Arrangement.spacedBy(8.dp)
                                 ) {
 
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically
+
+                                        horizontalArrangement =
+                                            Arrangement.SpaceBetween,
+
+                                        verticalAlignment =
+                                            Alignment.CenterVertically
                                     ) {
 
                                         Text(
                                             text = task.title,
+
                                             modifier = Modifier.weight(1f),
+
                                             maxLines = 2,
-                                            overflow = TextOverflow.Ellipsis,
+
+                                            overflow =
+                                                TextOverflow.Ellipsis,
+
                                             fontWeight = FontWeight.Bold
                                         )
 
                                         IconButton(
                                             onClick = {
+
                                                 selectedTask = task
                                                 editTitle = ""
                                                 showDialog = true
@@ -434,7 +500,9 @@ fun MainScreen(
                                         ) {
 
                                             Icon(
-                                                imageVector = Icons.Default.Delete,
+                                                imageVector =
+                                                    Icons.Default.Delete,
+
                                                 contentDescription = "Delete"
                                             )
                                         }
@@ -442,13 +510,21 @@ fun MainScreen(
 
                                     Text(
                                         text = task.priority,
+
                                         maxLines = 2,
+
                                         overflow = TextOverflow.Ellipsis,
+
                                         color = when (task.priority) {
+
                                             highText -> Color.Red
-                                            mediumText -> Color(0xFFFFC107)
+
+                                            mediumText ->
+                                                Color(0xFFFFC107)
+
                                             else -> Color.Green
                                         },
+
                                         fontWeight = FontWeight.Bold
                                     )
                                 }
@@ -460,10 +536,16 @@ fun MainScreen(
         }
 
         // DIALOG DELETE
-        if (showDialog && selectedTask != null && editTitle.isEmpty()) {
+        if (
+            showDialog &&
+            selectedTask != null &&
+            editTitle.isEmpty()
+        ) {
 
             AlertDialog(
+
                 onDismissRequest = {
+
                     showDialog = false
                     selectedTask = null
                 },
@@ -509,10 +591,16 @@ fun MainScreen(
         }
 
         // DIALOG UPDATE
-        if (showDialog && selectedTask != null && editTitle.isNotEmpty()) {
+        if (
+            showDialog &&
+            selectedTask != null &&
+            editTitle.isNotEmpty()
+        ) {
 
             AlertDialog(
+
                 onDismissRequest = {
+
                     showDialog = false
                     selectedTask = null
                     editTitle = ""
@@ -528,22 +616,28 @@ fun MainScreen(
 
                         OutlinedTextField(
                             value = editTitle,
+
                             onValueChange = {
                                 editTitle = it
                             },
+
                             label = {
                                 Text("Task")
                             }
                         )
 
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(
+                            modifier = Modifier.height(8.dp)
+                        )
 
                         Row(
-                            verticalAlignment = Alignment.CenterVertically
+                            verticalAlignment =
+                                Alignment.CenterVertically
                         ) {
 
                             RadioButton(
                                 selected = editPriority == "high",
+
                                 onClick = {
                                     editPriority = "high"
                                 }
@@ -553,6 +647,7 @@ fun MainScreen(
 
                             RadioButton(
                                 selected = editPriority == "medium",
+
                                 onClick = {
                                     editPriority = "medium"
                                 }
@@ -562,6 +657,7 @@ fun MainScreen(
 
                             RadioButton(
                                 selected = editPriority == "low",
+
                                 onClick = {
                                     editPriority = "low"
                                 }
@@ -578,6 +674,7 @@ fun MainScreen(
                         onClick = {
 
                             val priorityText = when (editPriority) {
+
                                 "high" -> highText
                                 "medium" -> mediumText
                                 else -> lowText
